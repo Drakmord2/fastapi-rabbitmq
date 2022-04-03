@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  api:
+    container_name: fastapi_producer
+    build: '.'
+    working_dir: /app
+    entrypoint: ["/venv/bin/python", "start_app.py"]
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+    environment:
+      - CLUSTER=LOCAL
+      - PYTHONUNBUFFERED=1
+    networks:
+      - code_network
+    depends_on:
+      - broker
+
+  broker:
+    container_name: message_broker
+    image: "rabbitmq:3.9-management-alpine"
+    ports: 
+      - "8080:15672"
+      - "5672:5672"
+    hostname: fastapi_node
+    networks:
+      - code_network
+
+networks:
+  code_network:
+    driver: bridge
