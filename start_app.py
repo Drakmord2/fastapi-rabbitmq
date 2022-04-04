@@ -3,7 +3,7 @@ import gunicorn.app.base
 import uvicorn
 from uvicorn.workers import UvicornWorker
 from os import getenv
-from app.main import app
+from producer.main import app
 
 
 def number_of_workers():
@@ -17,7 +17,11 @@ class StandaloneApplication(gunicorn.app.base.BaseApplication):
         super().__init__()
 
     def load_config(self):
-        config = {key: value for key, value in self.options.items() if key in self.cfg.settings and value is not None}
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings and value is not None
+        }
         for key, value in config.items():
             self.cfg.set(key.lower(), value)
 
@@ -35,7 +39,15 @@ if __name__ == "__main__":
         reload = True
 
     if getenv("CLUSTER") in ["KUBERNETES", "LOCAL"]:
-        uvicorn.run("app.main:app", host="0.0.0.0", port=5000, log_level="info", reload=reload, reload_dirs=["app"], server_header=False)
+        uvicorn.run(
+            "producer.main:app",
+            host="0.0.0.0",
+            port=5000,
+            log_level="info",
+            reload=reload,
+            reload_dirs=["producer"],
+            server_header=False,
+        )
     else:
         options = {
             "bind": "%s:%s" % ("0.0.0.0", "5000"),

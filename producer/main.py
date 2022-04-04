@@ -3,10 +3,11 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import secure
 
-from app.schemas.main import VersionSchema
-from app.utils.const import ErrorMessage
+from producer.schemas.main import VersionSchema
+from producer.utils.const import ErrorMessage
+from producer.controllers import producer
 
-# Instancia da API
+# API instance
 app = FastAPI(title="FastAPI", version="1.0.0")
 
 # Middlewares
@@ -26,6 +27,9 @@ async def set_secure_headers(request, call_next):
     return response
 
 
+# Routes
+app.include_router(producer.router)
+
 # Index
 @app.get("/", tags=["App"], response_model=VersionSchema)
 async def api_status():
@@ -33,7 +37,7 @@ async def api_status():
     return {"name": app.title, "version": app.version}
 
 
-# Handler de erros
+# Error handler
 @app.exception_handler(Exception)
 async def exception_handler(request: Request, exc: Exception):
     return JSONResponse(
