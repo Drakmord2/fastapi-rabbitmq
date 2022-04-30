@@ -1,3 +1,4 @@
+from producer.clients.fibonacci import FibonacciRpcClient
 from fastapi import APIRouter
 import pika
 
@@ -85,7 +86,7 @@ def send_message_to_specific_subscribers(
 def send_message_to_specific_subscribers(
     exchange: str = "topic_logs",
     message: str = "Log 1",
-    routing_key: str = "critical",
+    routing_key: str = "kern.critical",
 ):
     """Send message to a topic exchange on RabbitMQ"""
 
@@ -99,3 +100,15 @@ def send_message_to_specific_subscribers(
         channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
 
     return {"sent": message}
+
+
+@router.post("/rpc")
+def send_rpc_request(
+    value: int = 30,
+):
+    """Send RPC request on RabbitMQ"""
+
+    fibonacci_rpc = FibonacciRpcClient()
+    response = fibonacci_rpc.call(value)
+
+    return {"sent": value, "received": response}
