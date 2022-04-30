@@ -63,7 +63,7 @@ def send_message_to_subscribers(
 
 @router.post("/routing")
 def send_message_to_specific_subscribers(
-    exchange: str = "trace",
+    exchange: str = "direct_logs",
     message: str = "Log 1",
     routing_key: str = "critical",
 ):
@@ -75,6 +75,26 @@ def send_message_to_specific_subscribers(
         channel = connection.channel()
 
         channel.exchange_declare(exchange=exchange, exchange_type="direct")
+
+        channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+
+    return {"sent": message}
+
+
+@router.post("/topic")
+def send_message_to_specific_subscribers(
+    exchange: str = "topic_logs",
+    message: str = "Log 1",
+    routing_key: str = "critical",
+):
+    """Send message to a topic exchange on RabbitMQ"""
+
+    parameters = pika.ConnectionParameters(host="broker")
+
+    with pika.BlockingConnection(parameters) as connection:
+        channel = connection.channel()
+
+        channel.exchange_declare(exchange=exchange, exchange_type="topic")
 
         channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
 
