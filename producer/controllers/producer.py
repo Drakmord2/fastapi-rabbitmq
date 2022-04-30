@@ -6,9 +6,7 @@ router = APIRouter(prefix="/produce", tags=["Producer"])
 
 @router.post("/named")
 def send_message_to_named_queue(
-    exchange: str = "amq.direct",
     queue: str = "service_A",
-    routing_key: str = "serv.A",
     message: str = "Message 1",
 ):
     """Send message to a named queue on RabbitMQ"""
@@ -19,18 +17,15 @@ def send_message_to_named_queue(
         channel = connection.channel()
 
         channel.queue_declare(queue=queue)
-        channel.queue_bind(queue=queue, exchange=exchange, routing_key=routing_key)
 
-        channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+        channel.basic_publish(exchange="", routing_key=queue, body=message)
 
     return {"sent": message}
 
 
 @router.post("/worker")
 def send_message_to_worker_queue(
-    exchange: str = "amq.direct",
     queue: str = "service_B",
-    routing_key: str = "serv.B",
     message: str = "Task 1",
 ):
     """Send message to a worker queue on RabbitMQ"""
@@ -41,9 +36,8 @@ def send_message_to_worker_queue(
         channel = connection.channel()
 
         channel.queue_declare(queue=queue)
-        channel.queue_bind(queue=queue, exchange=exchange, routing_key=routing_key)
 
-        channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+        channel.basic_publish(exchange="", routing_key=queue, body=message)
 
     return {"sent": message}
 
@@ -51,7 +45,7 @@ def send_message_to_worker_queue(
 @router.post("/pubsub")
 def send_message_to_subscribers(
     exchange: str = "logs",
-    message: str = "Task 1",
+    message: str = "Log 1",
 ):
     """Send message to a fanout exchange on RabbitMQ"""
 
@@ -63,5 +57,25 @@ def send_message_to_subscribers(
         channel.exchange_declare(exchange=exchange, exchange_type="fanout")
 
         channel.basic_publish(exchange=exchange, routing_key="", body=message)
+
+    return {"sent": message}
+
+
+@router.post("/routing")
+def send_message_to_specific_subscribers(
+    exchange: str = "trace",
+    message: str = "Log 1",
+    routing_key: str = "critical",
+):
+    """Send message to a direct exchange on RabbitMQ"""
+
+    parameters = pika.ConnectionParameters(host="broker")
+
+    with pika.BlockingConnection(parameters) as connection:
+        channel = connection.channel()
+
+        channel.exchange_declare(exchange=exchange, exchange_type="direct")
+
+        channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
 
     return {"sent": message}
