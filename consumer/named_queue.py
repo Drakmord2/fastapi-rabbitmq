@@ -4,10 +4,11 @@ import os
 
 
 def main(queue):
-    parameters = pika.ConnectionParameters(host="broker")
+    parameters = pika.ConnectionParameters(host="localhost")
 
     with pika.BlockingConnection(parameters) as connection:
         channel = connection.channel()
+        channel.queue_declare(queue=queue, durable=False)
 
         def callback(ch, method, properties, body):
             print(" [x] Received %r" % body)
