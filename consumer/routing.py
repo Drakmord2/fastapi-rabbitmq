@@ -3,7 +3,7 @@ import sys
 import os
 
 
-def main(exchange, routing_key):
+def main(exchange, routing_keys):
     parameters = pika.ConnectionParameters(host="localhost")
 
     with pika.BlockingConnection(parameters) as connection:
@@ -11,9 +11,13 @@ def main(exchange, routing_key):
 
         channel.exchange_declare(exchange=exchange, exchange_type="direct")
         result = channel.queue_declare(queue="", exclusive=True)
-        channel.queue_bind(
-            queue=result.method.queue, exchange=exchange, routing_key=routing_key
-        )
+
+        routing_keys = routing_keys.split(",")
+
+        for routing_key in routing_keys:
+            channel.queue_bind(
+                queue=result.method.queue, exchange=exchange, routing_key=routing_key
+            )
 
         def callback(ch, method, properties, body):
             print(" [x] Received %r" % body)
