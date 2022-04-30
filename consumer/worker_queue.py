@@ -17,6 +17,7 @@ def main(queue):
             print("   [x] Done")
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
+        channel.basic_qos(prefetch_count=1)
         channel.basic_consume(queue=queue, on_message_callback=callback)
 
         print("[*] Waiting for messages. To exit press CTRL+C")
